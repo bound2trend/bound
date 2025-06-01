@@ -55,37 +55,45 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (email, password) => {
-        set({ isLoading: true, error: null });
+  set({ isLoading: true, error: null });
 
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-          if (error) throw error;
+    if (error) throw error;
 
-          if (data.user) {
-            const { data: userData } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', data.user.id)
-              .single();
+    if (data.user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
 
-            set({
-              user: userData as User,
-              isLoading: false,
-              error: null
-            });
-          }
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Login failed'
-          });
-          throw error;  // <--- This throws error to form catch block
-        }
-      },
+      set({
+        user: userData as User,
+        isLoading: false,
+        error: null,
+      });
+    } else {
+      // Fix: reset loading and set error if no user returned
+      set({
+        isLoading: false,
+        error: 'Login failed: user not found',
+      });
+      throw new Error('Login failed: user not found');
+    }
+  } catch (error) {
+    set({
+      isLoading: false,
+      error: error instanceof Error ? error.message : 'Login failed',
+    });
+    throw error;
+  }
+},
+
 
       register: async (email, password) => {
         set({ isLoading: true, error: null });
