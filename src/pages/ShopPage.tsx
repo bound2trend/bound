@@ -104,8 +104,8 @@ const ShopPage: React.FC = () => {
     setFilteredProducts(filtered);
   }, [category, collection, selectedSizes, selectedColors, priceRange, sortBy]);
 
-  // Update URL query params to reflect filters
-  const updateQueryParams = () => {
+  // Update URL query params to reflect filters whenever filter state changes
+  useEffect(() => {
     const searchParams = new URLSearchParams();
 
     if (sortBy) searchParams.set('sort', sortBy);
@@ -114,8 +114,8 @@ const ShopPage: React.FC = () => {
     searchParams.set('minPrice', priceRange[0].toString());
     searchParams.set('maxPrice', priceRange[1].toString());
 
-    navigate({ search: searchParams.toString() });
-  };
+    navigate({ search: searchParams.toString() }, { replace: true });
+  }, [sortBy, selectedSizes, selectedColors, priceRange, navigate]);
 
   // Handlers to toggle filters
   const toggleSize = (size: string) => {
@@ -136,13 +136,13 @@ const ShopPage: React.FC = () => {
     setSelectedColors([]);
     setPriceRange([0, 5000]);
     setSortBy('featured');
-    navigate({ search: '' });
+    navigate({ search: '' }, { replace: true });
   };
 
   // Apply filters (used in mobile sidebar)
   const applyFilters = () => {
-    updateQueryParams();
     setIsFilterOpen(false);
+    // URL already updates via useEffect on state change
   };
 
   // Close sort dropdown when clicking outside
@@ -199,13 +199,29 @@ const ShopPage: React.FC = () => {
               <span>{priceRange[0]}</span>
               <span>{priceRange[1]}</span>
             </div>
+            {/* Added min price slider */}
             <input
               type="range"
               min={0}
+              max={priceRange[1]}
+              step={100}
+              value={priceRange[0]}
+              onChange={e => {
+                const val = Number(e.target.value);
+                if (val <= priceRange[1]) setPriceRange([val, priceRange[1]]);
+              }}
+              className="w-full mb-2"
+            />
+            <input
+              type="range"
+              min={priceRange[0]}
               max={5000}
               step={100}
               value={priceRange[1]}
-              onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
+              onChange={e => {
+                const val = Number(e.target.value);
+                if (val >= priceRange[0]) setPriceRange([priceRange[0], val]);
+              }}
               className="w-full"
             />
           </div>
@@ -219,13 +235,10 @@ const ShopPage: React.FC = () => {
                   key={size}
                   className={`px-3 py-1 border rounded-md text-sm ${
                     selectedSizes.includes(size)
-                      ? 'border-primary bg-primary/10 text-primary'
+                      ? 'border-primary bg-primary/10 text-primary font-semibold'
                       : 'border-neutral-300 text-neutral-700'
                   }`}
-                  onClick={() => {
-                    toggleSize(size);
-                    updateQueryParams();
-                  }}
+                  onClick={() => toggleSize(size)}
                   type="button"
                   aria-pressed={selectedSizes.includes(size)}
                 >
@@ -239,92 +252,74 @@ const ShopPage: React.FC = () => {
           <div>
             <h3 className="text-sm font-medium mb-2">Colors</h3>
             <div className="flex flex-wrap gap-2">
-              {allColors.map(color => {
-                const colorObj = products.find(p =>
-                  p.colors.some(c => c.name === color)
-                )?.colors.find(c => c.name === color);
-
-                return (
-                  <button
-                    key={color}
-                    className={`w-8 h-8 rounded-full border ${
-                      selectedColors.includes(color)
-                        ? 'border-primary ring-2 ring-primary'
-                        : 'border-neutral-300'
-                    }`}
-                    style={{ backgroundColor: colorObj?.value || '#ccc' }}
-                    onClick={() => {
-                      toggleColor(color);
-                      updateQueryParams();
-                    }}
-                    type="button"
-                    aria-pressed={selectedColors.includes(color)}
-                    title={color}
-                  />
-                );
-              })}
+              {allColors.map(color => (
+                <button
+                  key={color}
+                  className={`w-8 h-8 rounded-full border ${
+                    selectedColors.includes(color)
+                      ? 'border-primary'
+                      : 'border-neutral-300'
+                  }`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => toggleColor(color)}
+                  type="button"
+                  aria-pressed={selectedColors.includes(color)}
+                  title={color}
+                />
+              ))}
             </div>
           </div>
+
+          {/* Clear filters */}
+          {(selectedSizes.length > 0 || selectedColors.length > 0 || priceRange[0] > 0 || priceRange[1] < 5000) && (
+            <button
+              onClick={clearFilters}
+              type="button"
+              className="mt-6 text-sm text-primary underline"
+            >
+              Clear Filters
+            </button>
+          )}
         </aside>
 
         {/* Main Content */}
-        <main className="flex-grow">
-          {/* Mobile filter + sort bar */}
-          <div className="md:hidden flex items-center justify-between mb-4">
-            {/* Filters toggle */}
+        <main className="flex-1 min-w-0">
+          {/* Mobile filters & sort buttons */}
+          <div className="flex justify-between items-center mb-6 md:hidden">
             <button
-              className="flex items-center gap-2 text-neutral-900 px-3 py-1.5 border rounded-md"
               onClick={() => setIsFilterOpen(true)}
               type="button"
-              aria-label="Open filters"
+              className="flex items-center gap-2 border px-4 py-2 rounded-md"
             >
-              <Filter size={18} />
+              <Filter size={16} />
               Filters
             </button>
-
-            {/* Sort dropdown */}
             <div className="relative" ref={sortDropdownRef}>
               <button
-                className="flex items-center gap-1 px-3 py-1.5 border rounded-md text-neutral-900"
-                onClick={() => setIsSortOpen(open => !open)}
+                onClick={() => setIsSortOpen(!isSortOpen)}
                 type="button"
-                aria-haspopup="listbox"
-                aria-expanded={isSortOpen}
-                aria-label="Sort options"
+                className="flex items-center gap-2 border px-4 py-2 rounded-md"
               >
                 Sort: {currentSortLabel}
                 {isSortOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
 
               {isSortOpen && (
-                <ul
-                  className="absolute right-0 mt-1 w-48 bg-white border border-neutral-300 rounded-md shadow-lg z-20"
-                  role="listbox"
-                  tabIndex={-1}
-                >
-                  {sortOptions.map(option => (
-                    <li
-                      key={option.value}
-                      role="option"
-                      aria-selected={sortBy === option.value}
-                      tabIndex={0}
-                      className={`cursor-pointer px-4 py-2 hover:bg-primary/20 ${
-                        sortBy === option.value ? 'font-semibold text-primary' : ''
-                      }`}
-                      onClick={() => {
-                        setSortBy(option.value);
-                        updateQueryParams();
-                        setIsSortOpen(false);
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          setSortBy(option.value);
-                          updateQueryParams();
+                <ul className="absolute z-20 top-full mt-1 bg-white border rounded-md shadow-md w-48">
+                  {sortOptions.map(opt => (
+                    <li key={opt.value}>
+                      <button
+                        onClick={() => {
+                          setSortBy(opt.value);
                           setIsSortOpen(false);
-                        }
-                      }}
-                    >
-                      {option.label}
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          opt.value === sortBy ? 'bg-primary/10 font-semibold' : ''
+                        }`}
+                        type="button"
+                      >
+                        {opt.label}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -333,39 +328,34 @@ const ShopPage: React.FC = () => {
           </div>
 
           {/* Products grid */}
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredProducts.length === 0 ? (
+            <p>No products found.</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-          ) : (
-            <p className="text-center text-neutral-600">No products found matching your filters.</p>
           )}
         </main>
       </div>
 
       {/* Mobile filter sidebar */}
       {isFilterOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setIsFilterOpen(false)}
-            aria-hidden="true"
-          />
-          <aside className="relative bg-white w-72 p-6 overflow-auto">
-            <button
-              className="absolute top-4 right-4 text-neutral-600 hover:text-neutral-900"
-              onClick={() => setIsFilterOpen(false)}
-              type="button"
-              aria-label="Close filters"
-            >
-              <X size={24} />
-            </button>
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 flex">
+          <aside className="w-72 bg-white p-6 overflow-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Filters</h2>
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                type="button"
+                aria-label="Close filters"
+              >
+                <X size={24} />
+              </button>
+            </div>
 
-            <h2 className="text-lg font-semibold mb-6">Filters</h2>
-
-            {/* Price Range */}
+            {/* Same filters as desktop */}
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Price Range (₹)</h3>
               <div className="flex justify-between text-xs text-neutral-600 mb-2">
@@ -375,15 +365,29 @@ const ShopPage: React.FC = () => {
               <input
                 type="range"
                 min={0}
+                max={priceRange[1]}
+                step={100}
+                value={priceRange[0]}
+                onChange={e => {
+                  const val = Number(e.target.value);
+                  if (val <= priceRange[1]) setPriceRange([val, priceRange[1]]);
+                }}
+                className="w-full mb-2"
+              />
+              <input
+                type="range"
+                min={priceRange[0]}
                 max={5000}
                 step={100}
                 value={priceRange[1]}
-                onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
+                onChange={e => {
+                  const val = Number(e.target.value);
+                  if (val >= priceRange[0]) setPriceRange([priceRange[0], val]);
+                }}
                 className="w-full"
               />
             </div>
 
-            {/* Sizes */}
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Sizes</h3>
               <div className="flex flex-wrap gap-2">
@@ -392,7 +396,7 @@ const ShopPage: React.FC = () => {
                     key={size}
                     className={`px-3 py-1 border rounded-md text-sm ${
                       selectedSizes.includes(size)
-                        ? 'border-primary bg-primary/10 text-primary'
+                        ? 'border-primary bg-primary/10 text-primary font-semibold'
                         : 'border-neutral-300 text-neutral-700'
                     }`}
                     onClick={() => toggleSize(size)}
@@ -405,52 +409,51 @@ const ShopPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Colors */}
-            <div>
+            <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Colors</h3>
               <div className="flex flex-wrap gap-2">
-                {allColors.map(color => {
-                  const colorObj = products.find(p =>
-                    p.colors.some(c => c.name === color)
-                  )?.colors.find(c => c.name === color);
-
-                  return (
-                    <button
-                      key={color}
-                      className={`w-8 h-8 rounded-full border ${
-                        selectedColors.includes(color)
-                          ? 'border-primary ring-2 ring-primary'
-                          : 'border-neutral-300'
-                      }`}
-                      style={{ backgroundColor: colorObj?.value || '#ccc' }}
-                      onClick={() => toggleColor(color)}
-                      type="button"
-                      aria-pressed={selectedColors.includes(color)}
-                      title={color}
-                    />
-                  );
-                })}
+                {allColors.map(color => (
+                  <button
+                    key={color}
+                    className={`w-8 h-8 rounded-full border ${
+                      selectedColors.includes(color)
+                        ? 'border-primary'
+                        : 'border-neutral-300'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => toggleColor(color)}
+                    type="button"
+                    aria-pressed={selectedColors.includes(color)}
+                    title={color}
+                  />
+                ))}
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="mt-6 flex justify-between">
+            <div className="flex justify-between gap-4">
               <button
-                className="px-4 py-2 bg-neutral-200 rounded-md text-neutral-700 hover:bg-neutral-300"
                 onClick={clearFilters}
                 type="button"
+                className="flex-1 border border-neutral-300 rounded-md py-2 text-sm text-neutral-600"
               >
-                Clear All
+                Clear Filters
               </button>
               <button
-                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
                 onClick={applyFilters}
                 type="button"
+                className="flex-1 bg-primary text-white rounded-md py-2 text-sm"
               >
                 Apply
               </button>
             </div>
           </aside>
+          <div
+            className="flex-1"
+            onClick={() => setIsFilterOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close filter sidebar"
+          />
         </div>
       )}
     </div>
