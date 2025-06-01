@@ -1,106 +1,144 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 
-// Get environment variables with fallbacks
+// Get environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase URL or Anonymous Key. Please click the "Connect to Supabase" button in the top right to set up your project.');
+  throw new Error(
+    'Missing Supabase URL or Anonymous Key. Please click the "Connect to Supabase" button in the top right to set up your project.'
+  );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client instance
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function signIn(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  
-  return { data, error };
+// --- Auth functions ---
+
+// Sign In user using email and password
+export async function signIn(email: string, password: string): Promise<{ user?: User; session?: Session; error?: Error }> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      return { error };
+    }
+    // data contains { user, session }
+    return { user: data.user, session: data.session };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-  
-  return { data, error };
+// Sign Up new user with email and password
+export async function signUp(email: string, password: string): Promise<{ user?: User; session?: Session; error?: Error }> {
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      return { error };
+    }
+    return { user: data.user, session: data.session };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  return { error };
+// Sign out current user
+export async function signOut(): Promise<{ error?: Error }> {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) return { error };
+    return {};
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*');
-  
-  return { data, error };
+// --- Product related queries ---
+
+export async function getProducts(): Promise<{ data?: any[]; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('products').select('*');
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getProductBySlug(slug: string) {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
-  return { data, error };
+export async function getProductBySlug(slug: string): Promise<{ data?: any; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('products').select('*').eq('slug', slug).single();
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getFeaturedProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('featured', true)
-    .limit(8);
-  
-  return { data, error };
+export async function getFeaturedProducts(): Promise<{ data?: any[]; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('products').select('*').eq('featured', true).limit(8);
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getWishlist(userId: string) {
-  const { data, error } = await supabase
-    .from('wishlist')
-    .select('*, product:products(*)')
-    .eq('user_id', userId);
-  
-  return { data, error };
+// --- Wishlist ---
+
+export async function getWishlist(userId: string): Promise<{ data?: any[]; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('wishlist').select('*, product:products(*)').eq('user_id', userId);
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function addToWishlist(userId: string, productId: string) {
-  const { data, error } = await supabase
-    .from('wishlist')
-    .insert([{ user_id: userId, product_id: productId }]);
-  
-  return { data, error };
+export async function addToWishlist(userId: string, productId: string): Promise<{ data?: any; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('wishlist').insert([{ user_id: userId, product_id: productId }]);
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function removeFromWishlist(userId: string, productId: string) {
-  const { data, error } = await supabase
-    .from('wishlist')
-    .delete()
-    .match({ user_id: userId, product_id: productId });
-  
-  return { data, error };
+export async function removeFromWishlist(userId: string, productId: string): Promise<{ data?: any; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('wishlist').delete().match({ user_id: userId, product_id: productId });
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getOrders(userId: string) {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  
-  return { data, error };
+// --- Orders ---
+
+export async function getOrders(userId: string): Promise<{ data?: any[]; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
 
-export async function getFitRoomModels() {
-  const { data, error } = await supabase
-    .from('fit_room_models')
-    .select('*');
-  
-  return { data, error };
+// --- FitRoom models ---
+
+export async function getFitRoomModels(): Promise<{ data?: any[]; error?: Error }> {
+  try {
+    const { data, error } = await supabase.from('fit_room_models').select('*');
+    if (error) return { error };
+    return { data };
+  } catch (err) {
+    return { error: err as Error };
+  }
 }
