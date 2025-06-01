@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Search, ShoppingBag, Heart, User, Menu, X, ChevronDown 
+  Search, ShoppingBag, Heart, User, Menu, X 
 } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
@@ -32,25 +32,28 @@ const Header: React.FC = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsCartOpen(false);
+    setIsDropdownOpen('');
   }, [location]);
   
-  // Navigation links
+  // Navigation links - Shop is now a simple link, no dropdown
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Shop', path: '/shop' }, // No dropdown here
     { 
-      name: 'Shop', 
-      path: '/shop',
-      dropdown: [
-        { name: 'New Arrivals', path: '/shop/new-arrivals' },
-        { name: 'Bestsellers', path: '/shop/bestsellers' },
-        { name: 'Tees', path: '/shop/category/tees' },
-        { name: 'Bottoms', path: '/shop/category/bottoms' },
-        { name: 'Outerwear', path: '/shop/category/outerwear' },
-      ]
+      name: 'FitRoom', 
+      path: '/fitroom',
+      // No dropdown here but could add if needed
     },
-    { name: 'FitRoom', path: '/fitroom' },
-    { name: 'FAQ', path: '/faq' },
-    { name: 'Contact', path: '/contact' },
+    { 
+      name: 'FAQ', 
+      path: '/faq',
+      // No dropdown here
+    },
+    { 
+      name: 'Contact', 
+      path: '/contact',
+      // No dropdown here
+    },
   ];
   
   return (
@@ -67,42 +70,15 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navLinks.map((link) => (
-              <div key={link.name} className="relative group">
-                {link.dropdown ? (
-                  <div className="flex items-center">
-                    <button 
-                      className="text-base font-medium hover:text-primary flex items-center"
-                      onClick={() => setIsDropdownOpen(isDropdownOpen === link.name ? '' : link.name)}
-                    >
-                      {link.name}
-                      <ChevronDown size={16} className="ml-1" />
-                    </button>
-                    
-                    {isDropdownOpen === link.name && (
-                      <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-50">
-                        {link.dropdown.map((item) => (
-                          <Link 
-                            key={item.name} 
-                            to={item.path} 
-                            className="block px-4 py-2 text-neutral-800 hover:bg-neutral-100 hover:text-primary"
-                            onClick={() => setIsDropdownOpen('')}
-                          >
-                            {item.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <Link 
-                    to={link.path} 
-                    className={`text-base font-medium ${
-                      location.pathname === link.path ? 'text-primary' : 'hover:text-primary'
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                )}
+              <div key={link.name}>
+                <Link 
+                  to={link.path} 
+                  className={`text-base font-medium ${
+                    location.pathname === link.path ? 'text-primary' : 'hover:text-primary'
+                  }`}
+                >
+                  {link.name}
+                </Link>
               </div>
             ))}
           </nav>
