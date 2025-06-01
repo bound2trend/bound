@@ -228,19 +228,19 @@ const ProductDetailPage: React.FC = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Button 
-                variant="primary" size="lg" fullWidth 
+                variant="primary" size="md" fullWidth 
                 onClick={handleAddToCart} 
                 disabled={!product.inStock}
               >
                 Add to Cart
               </Button>
 
-              <Button variant="secondary" size="lg" onClick={() => setIsFitRoomOpen(true)}>
+              <Button variant="secondary" size="md" onClick={() => setIsFitRoomOpen(true)}>
                 <TShirt size={20} className="mr-2" /> Try It On
               </Button>
 
               <Button 
-                variant="outline" size="lg" 
+                variant="outline" size="md" 
                 onClick={handleWishlist} 
                 className={isProductInWishlist ? 'bg-primary/10' : ''}
               >
