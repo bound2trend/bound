@@ -43,9 +43,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         return;
       }
       
-      await register(email, password);
+      try {
+        await register(email, password);
+      } catch (err: any) {
+        setFormError(err.message || 'Registration failed');
+      }
     } else {
-      await login(email, password);
+      try {
+        await login(email, password);
+      } catch (err: any) {
+        setFormError(err.message || 'Login failed');
+      }
     }
   };
   
