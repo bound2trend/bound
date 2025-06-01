@@ -40,12 +40,7 @@ const Header: React.FC = () => {
     { 
       name: 'Shop', 
       path: '/shop',
-      dropdown: [
-        { name: 'New Arrivals', path: '/shop/new-arrivals' },
-        { name: 'Bestsellers', path: '/shop/bestsellers' },
-        { name: 'Tees', path: '/shop/category/tees' },
-        { name: 'Bottoms', path: '/shop/category/bottoms' },
-        { name: 'Outerwear', path: '/shop/category/outerwear' },
+     
       ]
     },
     { name: 'FitRoom', path: '/fitroom' },
