@@ -20,7 +20,7 @@ const ShopPage: React.FC = () => {
 
   // State
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // For mobile sidebar
+  const [isFilterOpen, setIsFilterOpen] = useState(false); // Filter dropdown on mobile
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -29,6 +29,9 @@ const ShopPage: React.FC = () => {
   // Sort dropdown open state
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter dropdown open state & ref (for mobile)
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // All available sizes and colors from products
   const allSizes = Array.from(new Set(products.flatMap(p => p.sizes)));
@@ -139,25 +142,23 @@ const ShopPage: React.FC = () => {
     navigate({ search: '' }, { replace: true });
   };
 
-  // Apply filters (for mobile sidebar)
-  const applyFilters = () => {
-    setIsFilterOpen(false);
-  };
-
   // Close sort dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
         setIsSortOpen(false);
       }
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
     };
-    if (isSortOpen) {
+    if (isSortOpen || isFilterOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isSortOpen]);
+  }, [isSortOpen, isFilterOpen]);
 
   // Page title logic
   const getPageTitle = () => {
@@ -247,7 +248,7 @@ const ShopPage: React.FC = () => {
           </div>
 
           {/* Colors */}
-          <div>
+          <div className="mb-6">
             <h3 className="text-sm font-medium mb-2">Colors</h3>
             <div className="flex flex-wrap gap-2">
               {allColors.map(color => (
@@ -267,21 +268,126 @@ const ShopPage: React.FC = () => {
               ))}
             </div>
           </div>
+
+          <button
+            onClick={clearFilters}
+            className="text-sm text-primary underline mt-4"
+            type="button"
+          >
+            Clear All Filters
+          </button>
         </aside>
 
         {/* Main content */}
         <main className="flex-1">
           {/* Toolbar: sort and mobile filters */}
           <div className="mb-6 flex justify-between items-center">
-            <button
-              className="md:hidden flex items-center gap-2 text-neutral-700 font-semibold"
-              onClick={() => setIsFilterOpen(true)}
-              aria-label="Open Filters"
-            >
-              <Filter size={20} />
-              Filters
-            </button>
+            {/* Filter button - mobile only */}
+            <div className="relative md:hidden" ref={filterDropdownRef}>
+              <button
+                className="flex items-center gap-2 text-neutral-700 font-semibold"
+                onClick={() => setIsFilterOpen(prev => !prev)}
+                aria-label="Toggle Filters"
+                aria-expanded={isFilterOpen}
+              >
+                <Filter size={20} />
+                Filters
+                {isFilterOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
 
+              {isFilterOpen && (
+                <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-neutral-300 rounded-md shadow-lg p-4 z-50">
+                  {/* Filters content */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium mb-2">Price Range (₹)</h3>
+                    <div className="flex justify-between text-xs text-neutral-600 mb-2">
+                      <span>{priceRange[0]}</span>
+                      <span>{priceRange[1]}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={priceRange[1]}
+                      step={100}
+                      value={priceRange[0]}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (val <= priceRange[1]) setPriceRange([val, priceRange[1]]);
+                      }}
+                      className="w-full mb-2"
+                    />
+                    <input
+                      type="range"
+                      min={priceRange[0]}
+                      max={5000}
+                      step={100}
+                      value={priceRange[1]}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (val >= priceRange[0]) setPriceRange([priceRange[0], val]);
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Sizes */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium mb-2">Sizes</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {allSizes.map(size => (
+                        <button
+                          key={size}
+                          className={`px-3 py-1 border rounded-md text-sm ${
+                            selectedSizes.includes(size)
+                              ? 'border-primary bg-primary/10 text-primary font-semibold'
+                              : 'border-neutral-300 text-neutral-700'
+                          }`}
+                          onClick={() => toggleSize(size)}
+                          type="button"
+                          aria-pressed={selectedSizes.includes(size)}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Colors */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium mb-2">Colors</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {allColors.map(color => (
+                        <button
+                          key={color}
+                          className={`w-8 h-8 rounded-full border ${
+                            selectedColors.includes(color)
+                              ? 'border-primary'
+                              : 'border-neutral-300'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => toggleColor(color)}
+                          type="button"
+                          aria-pressed={selectedColors.includes(color)}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between mt-4">
+                    <button
+                      onClick={clearFilters}
+                      className="text-sm text-primary underline"
+                      type="button"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sort dropdown */}
             <div className="relative" ref={sortDropdownRef}>
               <button
                 onClick={() => setIsSortOpen(prev => !prev)}
@@ -333,130 +439,6 @@ const ShopPage: React.FC = () => {
           </div>
         </main>
       </div>
-
-      {/* Mobile Filters Sidebar */}
-      {isFilterOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          {/* Overlay */}
-          <div
-            className="fixed inset-0 bg-black opacity-40"
-            onClick={() => setIsFilterOpen(false)}
-            aria-hidden="true"
-          />
-
-          <aside className="relative z-60 w-80 bg-white p-6 overflow-y-auto">
-            <button
-              onClick={() => setIsFilterOpen(false)}
-              className="absolute top-4 right-4 p-1 text-neutral-600 hover:text-neutral-900"
-              aria-label="Close Filters"
-            >
-              <X size={24} />
-            </button>
-
-            <h2 className="text-lg font-semibold mb-6">Filters</h2>
-
-            {/* Price Range */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Price Range (₹)</h3>
-              <div className="flex justify-between text-xs text-neutral-600 mb-2">
-                <span>{priceRange[0]}</span>
-                <span>{priceRange[1]}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={priceRange[1]}
-                step={100}
-                value={priceRange[0]}
-                onChange={e => {
-                  const val = Number(e.target.value);
-                  if (val <= priceRange[1]) setPriceRange([val, priceRange[1]]);
-                }}
-                className="w-full mb-2"
-              />
-              <input
-                type="range"
-                min={priceRange[0]}
-                max={5000}
-                step={100}
-                value={priceRange[1]}
-                onChange={e => {
-                  const val = Number(e.target.value);
-                  if (val >= priceRange[0]) setPriceRange([priceRange[0], val]);
-                }}
-                className="w-full"
-              />
-            </div>
-
-            {/* Sizes */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Sizes</h3>
-              <div className="flex flex-wrap gap-2">
-                {allSizes.map(size => (
-                  <button
-                    key={size}
-                    className={`px-3 py-1 border rounded-md text-sm ${
-                      selectedSizes.includes(size)
-                        ? 'border-primary bg-primary/10 text-primary font-semibold'
-                        : 'border-neutral-300 text-neutral-700'
-                    }`}
-                    onClick={() => toggleSize(size)}
-                    type="button"
-                    aria-pressed={selectedSizes.includes(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Colors */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2">Colors</h3>
-              <div className="flex flex-wrap gap-2">
-                {allColors.map(color => (
-                  <button
-                    key={color}
-                    className={`w-8 h-8 rounded-full border ${
-                      selectedColors.includes(color)
-                        ? 'border-primary'
-                        : 'border-neutral-300'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    onClick={() => toggleColor(color)}
-                    type="button"
-                    aria-pressed={selectedColors.includes(color)}
-                    title={color}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Clear and Apply buttons */}
-            <div className="mt-6 flex justify-between gap-4">
-              <button
-                onClick={clearFilters}
-                className="text-sm text-primary underline"
-                type="button"
-              >
-                Clear Filters
-              </button>
-              <button
-                onClick={applyFilters}
-                className="text-sm bg-primary text-white px-4 py-2 rounded-md"
-                type="button"
-              >
-                Apply
-              </button>
-            </div>
-          </aside>
-          <div
-            className="flex-1"
-            onClick={() => setIsFilterOpen(false)}
-            aria-hidden="true"
-          />
-        </div>
-      )}
     </div>
   );
 };
