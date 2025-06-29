@@ -1,34 +1,39 @@
 import React from 'react';
-import { mockProducts } from '../../data/mockProducts';
-import { Link } from 'react-router-dom';
 
-const TrendingCarousel: React.FC = () => {
+const testimonials = [
+  {
+    name: 'Arjun M.',
+    text: 'Best menswear brand out there. The quality is unmatched!',
+  },
+  {
+    name: 'Rahul K.',
+    text: 'Got so many compliments. Already ordered again.',
+  },
+  {
+    name: 'Ishaan R.',
+    text: 'Delivered fast. Fit perfectly. Love the design!',
+  },
+];
+
+const TestimonialsSlider: React.FC = () => {
   return (
-    <section className="py-10 bg-white">
-      <div className="container-custom px-4">
-        <h2 className="text-3xl font-bold mb-6">Trending Now</h2>
-        <div className="flex overflow-x-auto gap-4 scrollbar-hide">
-          {mockProducts.slice(0, 8).map((product) => (
-            <Link
-              to={`/product/${product.id}`}
-              key={product.id}
-              className="flex-shrink-0 w-56"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-72 object-cover rounded-lg shadow-sm"
-              />
-              <h3 className="mt-2 font-medium text-sm text-gray-900">
-                {product.name}
-              </h3>
-              <p className="text-gray-600 text-sm">₹{product.price}</p>
-            </Link>
-          ))}
-        </div>
+    <section className="bg-neutral-100 py-12">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold">What Our Customers Say</h2>
+      </div>
+      <div className="flex overflow-x-auto gap-6 px-4 md:px-16 scrollbar-hide">
+        {testimonials.map((t, i) => (
+          <div
+            key={i}
+            className="min-w-[280px] max-w-sm bg-white p-6 rounded-lg shadow-md flex-shrink-0"
+          >
+            <p className="text-sm text-gray-700 mb-4">"{t.text}"</p>
+            <p className="font-semibold text-gray-900">– {t.name}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
 };
 
-export default TrendingCarousel;
+export default TestimonialsSlider;
