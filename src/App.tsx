@@ -1,73 +1,59 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import { useAuthStore } from './store/authStore';
 
-// Eager load home page for initial load performance
+// Layout
+import Header from './components/common/Header';
+import Footer from './components/common/Footer';
+
+// Pages
 import HomePage from './pages/HomePage';
+import ShopPage from './pages/ShopPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import WishlistPage from './pages/WishlistPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AccountPage from './pages/AccountPage';
+import ContactPage from './pages/ContactPage';
+import FaqPage from './pages/FaqPage';
+import NotFoundPage from './pages/NotFoundPage';
 
-// Lazy load other pages
-const ShopPage = lazy(() => import('./pages/ShopPage'));
-const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
-const CartPage = lazy(() => import('./pages/CartPage'));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
-const FitRoomPage = lazy(() => import('./pages/FitRoomPage'));
-const WishlistPage = lazy(() => import('./pages/WishlistPage'));
-const AccountPage = lazy(() => import('./pages/AccountPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const FaqPage = lazy(() => import('./pages/FaqPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+// UI Modals/Prompts
+import NewsletterModal from './components/home/NewsletterModal';
+import BackInStockPrompt from './components/home/BackInStockPrompt';
 
-function App() {
-  const checkSession = useAuthStore(state => state.checkSession);
-  
-  // Check for auth session on mount
-  useEffect(() => {
-    checkSession();
-  }, [checkSession]);
-  
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  
-  // Loading fallback
-  const PageLoading = () => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>
-  );
-  
+const App: React.FC = () => {
   return (
     <Router>
-      <Header />
-      <main>
-        <Suspense fallback={<PageLoading />}>
+      <div className="flex flex-col min-h-screen font-sans text-neutral-900 bg-white">
+        <Header />
+        
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
-            <Route path="/shop/category/:category" element={<ShopPage />} />
-            <Route path="/shop/:collection" element={<ShopPage />} />
-            <Route path="/product/:slug" element={<ProductDetailPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/fitroom" element={<FitRoomPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/account" element={<AccountPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </Suspense>
-      </main>
-      <Footer />
+        </main>
+
+        <Footer />
+
+        {/* Global Modals */}
+        <NewsletterModal />
+        <BackInStockPrompt />
+      </div>
     </Router>
   );
-}
+};
 
 export default App;
