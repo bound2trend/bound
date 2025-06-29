@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import Button from '../common/Button';
 
 interface HeroBannerProps {
   title: string;
@@ -10,84 +9,26 @@ interface HeroBannerProps {
   imageSrc: string;
 }
 
-const HeroBanner: React.FC<HeroBannerProps> = ({
-  title,
-  subtitle,
-  ctaText,
-  ctaLink,
-  imageSrc,
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      
-      if (imageRef.current) {
-        // Parallax effect for background image
-        imageRef.current.style.transform = `translateY(${scrollY * 0.4}px)`;
-      }
-      
-      if (contentRef.current && scrollY < 300) {
-        // Fade out effect for content
-        contentRef.current.style.opacity = `${1 - scrollY * 0.003}`;
-        contentRef.current.style.transform = `translateY(${scrollY * 0.2}px)`;
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-  
+const HeroBanner: React.FC<HeroBannerProps> = ({ title, subtitle, ctaText, ctaLink, imageSrc }) => {
   return (
-    <div 
-      ref={containerRef} 
-      className="relative h-screen overflow-hidden bg-neutral-900"
-    >
-      {/* Background image with parallax */}
-      <div 
-        ref={imageRef}
-        className="absolute inset-0 w-full h-full z-0"
-      >
-        <div 
-          className="absolute inset-0 bg-gradient-to-t from-neutral-900 to-transparent opacity-80 z-10"
-        ></div>
-        <img 
-          src={imageSrc} 
-          alt="Hero Banner" 
-          className="w-full h-full object-cover"
-        />
+    <section className="relative w-full h-[80vh] overflow-hidden">
+      <img
+        src={imageSrc}
+        alt="Hero"
+        className="object-cover w-full h-full absolute inset-0 z-0"
+      />
+      <div className="absolute inset-0 bg-black bg-opacity-40 z-10"></div>
+      <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white px-4">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">{title}</h1>
+        <p className="text-lg md:text-xl mb-6 max-w-2xl">{subtitle}</p>
+        <Link
+          to={ctaLink}
+          className="bg-navy text-white px-6 py-3 text-sm font-semibold rounded hover:bg-opacity-80 transition"
+        >
+          {ctaText}
+        </Link>
       </div>
-      
-      {/* Content */}
-      <div 
-        ref={contentRef}
-        className="container-custom relative z-20 flex flex-col justify-center h-full text-white"
-      >
-        <div className="max-w-2xl">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-            {title}
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            {subtitle}
-          </p>
-          <Link to={ctaLink}>
-            <Button 
-              variant="primary" 
-              size="lg"
-              className="animate-pulse"
-            >
-              {ctaText}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 };
 
