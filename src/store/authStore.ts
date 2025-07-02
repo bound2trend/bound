@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '../lib/firebase'; // You’ll set this up in firebase.ts later
+import { auth } from '../data/mockProducts'; // You’ll set this up in firebase.ts later
 
 interface AuthState {
   user: User | null;
