@@ -1,153 +1,66 @@
+// src/store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { supabase } from '../lib/supabase';
-import type { User } from '../types';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../lib/firebase'; // You’ll set this up in firebase.ts later
 
 interface AuthState {
   user: User | null;
-  isLoading: boolean;
+  loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  checkSession: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      isLoading: false,
+      loading: false,
       error: null,
 
-      checkSession: async () => {
-        set({ isLoading: true });
-
+      login: async (email, password) => {
+        set({ loading: true, error: null });
         try {
-          const { data } = await supabase.auth.getSession();
-
-          if (data.session) {
-            const { data: userData } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', data.session.user.id)
-              .single();
-
-            set({
-              user: userData as User,
-              isLoading: false,
-              error: null
-            });
-          } else {
-            set({
-              user: null,
-              isLoading: false,
-              error: null
-            });
-          }
-        } catch (error) {
-          set({
-            user: null,
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'An error occurred'
-          });
+          const res = await signInWithEmailAndPassword(auth, email, password);
+          set({ user: res.user, loading: false });
+        } catch (err: any) {
+          set({ error: err.message, loading: false });
         }
       },
 
-      login: async (email, password) => {
-  set({ isLoading: true, error: null });
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-
-    if (data.user) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      set({
-        user: userData as User,
-        isLoading: false,
-        error: null,
-      });
-    } else {
-      // Fix: reset loading and set error if no user returned
-      set({
-        isLoading: false,
-        error: 'Login failed: user not found',
-      });
-      throw new Error('Login failed: user not found');
-    }
-  } catch (error) {
-    set({
-      isLoading: false,
-      error: error instanceof Error ? error.message : 'Login failed',
-    });
-    throw error;
-  }
-},
-
-
       register: async (email, password) => {
-        set({ isLoading: true, error: null });
-
+        set({ loading: true, error: null });
         try {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-          });
-
-          if (error) throw error;
-
-          if (data.user) {
-            await supabase.from('users').insert([
-              {
-                id: data.user.id,
-                email: data.user.email
-              }
-            ]);
-
-            set({
-              user: {
-                id: data.user.id,
-                email: data.user.email as string
-              } as User,
-              isLoading: false,
-              error: null
-            });
-          }
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Registration failed'
-          });
-          throw error;  // <--- This throws error to form catch block
+          const res = await createUserWithEmailAndPassword(auth, email, password);
+          set({ user: res.user, loading: false });
+        } catch (err: any) {
+          set({ error: err.message, loading: false });
         }
       },
 
       logout: async () => {
-        set({ isLoading: true });
-
         try {
-          await supabase.auth.signOut();
-          set({ user: null, isLoading: false, error: null });
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Logout failed'
-          });
+          await signOut(auth);
+          set({ user: null });
+        } catch (err: any) {
+          console.error('Logout error:', err);
         }
       },
+
+      setUser: (user) => set({ user }),
     }),
     {
-      name: 'bound-auth-storage',
+      name: 'auth-storage',
+      partialize: (state) => ({ user: state.user }), // Persist only user data
     }
   )
 );
+
+// Listen for real-time auth updates
+onAuthStateChanged(auth, (user) => {
+  const store = useAuthStore.getState();
+  store.setUser(user || null);
+});
