@@ -1,24 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Button from '../components/common/Button';
 
 const NotFoundPage: React.FC = () => {
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center">
-      <div className="container-custom text-center py-16">
-        <h1 className="text-9xl font-bold text-primary mb-4">404</h1>
-        <h2 className="text-3xl font-bold mb-6">Page Not Found</h2>
-        <p className="text-neutral-600 max-w-md mx-auto mb-8">
-          The page you are looking for might have been removed, had its name changed, 
-          or is temporarily unavailable.
-        </p>
-        <Link to="/">
-          <Button variant="primary" size="lg">
-            Back to Homepage
-          </Button>
-        </Link>
-      </div>
-    </div>
+    <main className="flex flex-col items-center justify-center min-h-screen bg-neutral-100 px-6 text-center">
+      <h1 className="text-6xl md:text-8xl font-bold text-neutral-900">404</h1>
+      <p className="mt-4 text-lg md:text-xl text-neutral-600">
+        Oops! The page you're looking for doesn't exist.
+      </p>
+
+      <Link
+        to="/"
+        className="mt-6 inline-block px-6 py-3 bg-neutral-900 text-white font-medium rounded hover:bg-neutral-800 transition"
+      >
+        Back to Home
+      </Link>
+
+      <p className="mt-10 text-sm text-neutral-500">
+        Need help? <a href="/contact" className="underline">Contact us</a>
+      </p>
+    </main>
   );
 };
 
