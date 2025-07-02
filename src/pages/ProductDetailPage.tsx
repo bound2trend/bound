@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockProducts } from '../data/mockProducts'; // replace with Firebase fetch later
-import ProductCard from '../components/shop/ProductCard';
+import ProductCard from '../components/ProductCard';
 import { Loader, Star, Heart, Share2 } from 'lucide-react';
 
 interface Review {
