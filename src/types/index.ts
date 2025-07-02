@@ -1,111 +1,75 @@
+// src/types/index.ts
+
+// Used across Product-related components
 export interface Product {
   id: string;
   name: string;
-  slug: string;
+  brand: string;
+  category: string;
   description: string;
   price: number;
-  compareAtPrice?: number;
-  images: string[];
-  category: string;
-  collections: string[];
-  tags: string[];
+  discountPrice?: number;
+  color: string;
   sizes: string[];
-  colors: ProductColor[];
-  featured: boolean;
-  trending: boolean;
-  new: boolean;
-  inStock: boolean;
+  images: string[]; // Multiple images
+  tags?: string[];
   createdAt: string;
+  stock: number;
 }
 
-export interface ProductColor {
-  name: string;
-  value: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  image?: string;
-}
-
-export interface Collection {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  image?: string;
-}
-
+// Used for Cart management
 export interface CartItem {
   id: string;
-  productId: string;
-  product: Product;
+  name: string;
+  image: string;
+  price: number;
   quantity: number;
   size: string;
-  color: ProductColor;
-  price: number;
+  color: string;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-  phone?: string;
-  addresses?: Address[];
-}
-
-export interface Address {
-  id: string;
-  type: 'billing' | 'shipping';
-  firstName: string;
-  lastName: string;
-  address1: string;
-  address2?: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  phone?: string;
-  isDefault: boolean;
-}
-
+// Used for Wishlist management
 export interface WishlistItem {
   id: string;
-  userId: string;
-  productId: string;
-  product: Product;
-  addedAt: string;
+  name: string;
+  image: string;
+  price: number;
+  color?: string;
+  size?: string;
 }
 
-export interface Order {
-  id: string;
-  userId?: string;
-  items: CartItem[];
-  subtotal: number;
-  tax: number;
-  shipping: number;
-  total: number;
-  status: OrderStatus;
-  shippingAddress: Address;
-  billingAddress: Address;
-  paymentMethod: string;
-  createdAt: string;
-  updatedAt: string;
-  estimatedDelivery: string;
-}
-
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-
-export interface FitRoomModel {
+// User Profile (expandable for auth, dashboard, admin)
+export interface UserProfile {
   id: string;
   name: string;
-  gender: 'male' | 'female';
-  height: string;
-  build: string;
-  image: string;
+  email: string;
+  address?: string;
+  phone?: string;
+  photoURL?: string;
+  createdAt?: string;
+  isAdmin?: boolean;
+}
+
+// Order history & checkout details
+export interface Order {
+  id: string;
+  userId: string;
+  items: CartItem[];
+  totalAmount: number;
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  orderStatus: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: string;
+  createdAt: string;
+}
+
+// Product Review
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  userName?: string;
+  userPhoto?: string;
 }
